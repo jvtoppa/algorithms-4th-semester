@@ -1,176 +1,253 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
-typedef struct no
+typedef struct no {
+
+  int nome_conj;
+  int conj[127];
+  int arrsize;
+  struct no *prox;
+  struct no *ant;
+
+} no;
+
+typedef struct lista {
+
+  no *head;
+  int tam;
+
+} lista;
+
+lista *criar() //
 {
 
-int nome_conj;
-int conj[127];
-int arrsize;
-struct no* prox;
-struct no* ant;
-
-}no;
-
-typedef struct lista
-{
-
-no* head;
-int tam;
-
-}lista;
-
-lista* criar()//
-{
-
-lista* L = malloc(sizeof(lista));
-if(!L)
-{
+  lista *L = malloc(sizeof(lista));
+  if (!L) {
     return NULL;
-}
+  }
 
-L->head = NULL;
-L->tam = 0;
+  L->head = NULL;
+  L->tam = 0;
 
-no* dummy = malloc(sizeof(no));
+  no *dummy = malloc(sizeof(no));
 
-dummy->ant = L->head;
-dummy->prox = NULL;
+  dummy->ant = L->head;
+  dummy->prox = NULL;
 
-for(int i = 0; i < 127; i++)
-{
+  for (int i = 0; i < 127; i++) {
     dummy->conj[i] = 1;
-}
-L->head = dummy;
+  }
+  L->head = dummy;
 
-
-
-return L;
+  return L;
 }
 
-int insert_conjunto(lista* L, int arrval[127], int nomeC, int sizeArr)//
+int gerar_conjunto(lista *L, int nomeC)
 {
-    no* novo = malloc(sizeof(no));
-    if(!novo)
-    {
+    no *novo = malloc(sizeof(no));
+    if (!novo) {
         return 0;
     }
     novo->arrsize = 0;
-    for (int i = 0; i < sizeArr; i++)
-    {
-        novo->conj[i] = arrval[i];
-    }
-    novo->arrsize = sizeArr;
     novo->nome_conj = nomeC;
-    
     novo->prox = L->head->prox;
     novo->ant = L->head;
     L->head->prox = novo;
-    
-    
-
     L->tam++;
+    
     return 1;
 }
 
-void imprimir_lista(lista* L, int nomeC) //
+int inserir_elementos(lista *L, int arrval[], int nomeC, int sizeArr)
 {
-printf("C%d = {", nomeC);
-
-for(no* p = L->head->prox; p != NULL; p = p->prox)
-{
-    if(p->nome_conj == nomeC)
+    for (no *p = L->head->prox; p != NULL; p = p->prox) 
     {
-        for(int i = 0; i < p->arrsize; i++)
+        if (p->nome_conj == nomeC) 
         {
-            printf("%d", p->conj[i]);
-            if((i < p->arrsize - 1))
+            for (int i = p->arrsize; i < sizeArr; i++) 
             {
-                printf(", ");
+                p->conj[i] = arrval[i];
+                p->arrsize++;
             }
         }
-        break;
     }
-
 }
 
-printf("}\n");
+void imprimir_lista(lista *L, int nomeC) //
+{
+  printf("C%d = {", nomeC);
 
+  for (no *p = L->head->prox; p != NULL; p = p->prox) {
+    if (p->nome_conj == nomeC) {
+      for (int i = 0; i < p->arrsize; i++) {
+        printf("%d", p->conj[i]);
+        if ((i < p->arrsize - 1)) {
+          printf(", ");
+        }
+      }
+      break;
+    }
+  }
+
+  printf("}\n");
 }
 
-
-int libera(lista* L)//
+int libera(lista *L) //
 {
 
-    no* p = L->head;
-    while (p != NULL)
+  no *p = L->head;
+  while (p != NULL) {
+    no *temporario = p;
+    p = p->prox;
+    free(temporario);
+  }
+
+  free(L);
+  return 1;
+}
+
+int bubblesort(int vetor[], int arrsize) {
+  for (int i = 0; i < arrsize; i++) {
+    for (int j = 0; j < arrsize - 1; j++) {
+      int x = vetor[j];
+      int y = vetor[j + 1];
+      if (y < x) {
+        vetor[j] = y;
+        vetor[j + 1] = x;
+      }
+    }
+  }
+}
+
+int remove_elemento(lista *L, int nomeC, int remove_elem[], int size_remove) {
+  for (no *p = L->head->prox; p != NULL; p = p->prox) {
+    if (p->nome_conj == nomeC) {
+      for (int i = 0; i < p->arrsize; i++) {
+        for (int j = 0; j < size_remove; j++) {
+          if (p->conj[i] == remove_elem[j]) {
+            for (int k = i + 1; k < p->arrsize; k++) {
+              p->conj[k-1] = p->conj[k];
+            }
+            p->arrsize--;
+            i--;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return 1;
+}
+
+int uniao(lista* L, int nomeC1, int nomeC2, int nomeC3)
+{
+no* p = L->head->prox;
+no* C1 = NULL;
+no* C2 = NULL;
+no* C3 = NULL;
+while(p != NULL){
+    if (p->nome_conj == nomeC1)
     {
-        no* temporario = p; 
-        p = p->prox; 
-        free(temporario); 
+        C1 = p;
+
     }
-    
-    free(L); 
-    return 1;
-}
-
-int merge(int* vetorsort, int inicio, int m, int tamvetor)
-{
-    //int arr[tamvetor];
-
-
-}
-
-int merge_sort(int* vetorsort, int tamvetor)
-{
-    int inicio = 0;
-    int m;
-    if(inicio < tamvetor)
+    if(p->nome_conj == nomeC2)
     {
-        m = floor((inicio + tamvetor)/2);
-        merge_sort(vetorsort, inicio, m);
-        merge_sort(vetorsort, m + 1, tamvetor);
-        merge(vetorsort, inicio, m, tamvetor);
+
+        C2 = p;
     }
-    return 1;
+    if(p->nome_conj == nomeC3)
+    {
+
+        C3 = p;
+    }
+
+p = p->prox;
+}
+int arruniao[127];
+int tamarr = 0;
+for(int i = 0; i < C2->arrsize; i++)
+{
+    arruniao[tamarr] = C2->conj[i];
+    tamarr++;
+}
+for(int i = 0; i < C3->arrsize; i++)
+{
+    arruniao[tamarr] = C3->conj[i];
+    tamarr++;
+}
+for(int i = 0; i < tamarr; i++)
+{
+    for(int j = i + 1; j < tamarr; j++)
+    {
+        if(arruniao[j] == arruniao[i] && j != i)
+        {
+            for (int k = j; k < tamarr - 1; k++) {
+                arruniao[k] = arruniao[k + 1];
+            }
+            tamarr--; 
+            j--;
+        }
+    }    
 }
 
-int remove_elemento(lista* L)
+
+if (C1 == NULL)
 {
-    return 1;
+    gerar_conjunto(L,nomeC1);
+    for(no* p = L->head->prox; p != NULL; p->prox)
+    {
+        if (p->nome_conj == nomeC1)
+        {
+            p->arrsize = 0;
+            for(int i = 0; i < tamarr; i++){
+                p->conj[i] = arruniao[i];
+                p->arrsize++;
+            }
+            break;
+        }
+    }
+}
+else
+{
+    C1->arrsize = 0;
+    for(int i = 0; i < tamarr; i++)
+    {
+        C1->conj[i] = arruniao[i];
+        C1->arrsize++;    
+    }
 }
 
+return 1;
+}
 
-int main(void)
-{
-    lista* L = criar();
+int main(void) {
+    lista *L = criar();
 
     int val;
     int tam = 0;
     int i = 0;
     int valores[127];
 
-    while(scanf("%d", &val) == 1)
-    {
-        
+    while (scanf("%d", &val) == 1) {
+
         valores[i] = val;
         i++;
         tam++;
     }
+    bubblesort(valores, tam);
+    gerar_conjunto(L, 1);
+    gerar_conjunto(L, 2);
 
-    insert_conjunto(L, valores, 999, tam);
-    tam = 0;
-    for (int i = 0; i < 127; i++) {
-        valores[i] = i;
-        tam++;
-    }
-    insert_conjunto(L, valores, 77, tam);
+    int conj1[] = {1,2,3,4,5};
+    int conj2[] = {6,7,8,9,10};
+    inserir_elementos(L, conj1, 1, 5);
+    inserir_elementos(L, conj2, 2, 5);
+    uniao(L, 3, 1, 2);
 
-    imprimir_lista(L, 999);
-    imprimir_lista(L, 77);
+    imprimir_lista(L, 3);
 
     return 0;
-
 }
-
