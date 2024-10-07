@@ -218,6 +218,80 @@ lista *uniao(lista *arrList[], int nomeC1, int nomeC2, int nomeC3) {
 
   return res;
 }
+lista *intereseccao(lista *arrList[], int nomeC1, int nomeC2, int nomeC3) {
+  lista *conj1 = NULL;
+  lista *conj2 = NULL;
+  lista *conj3 = NULL;
+  for (int i = 0; i < 127; i++) {
+    if (arrList[i]->nome == nomeC1) {
+      conj1 = arrList[i];
+    }
+    if (arrList[i]->nome == nomeC2) {
+      conj2 = clone(arrList[i]);
+    }
+    if (arrList[i]->nome == nomeC3) {
+      conj3 = clone(arrList[i]);
+    }
+  }
+
+  if (!conj2 || !conj3) {
+    libera(conj2);
+    libera(conj3);
+    return NULL;
+  }
+
+  lista *res = malloc(sizeof(lista));
+  if (!res) {
+    libera(conj2);
+    libera(conj3);
+    return NULL;
+  }
+
+  res->head = malloc(sizeof(no));
+  if (!res->head) {
+    free(res);
+    libera(conj2);
+    libera(conj3);
+    return NULL;
+  }
+  res->head->prox = NULL;
+  res->tam = 0;
+  res->nome = nomeC1;
+
+  no* q = conj3->head->prox;
+  no* ultimo = res->head;
+
+  
+for(no* p = conj2->head->prox; p != NULL; p = p->prox)
+  {
+    no* novo = malloc(sizeof(no));
+    if(novo == NULL)
+    {
+      libera(conj2);
+      libera(conj3);
+      libera(res);
+      return NULL;
+    }
+    for(no* q = conj3->head->prox; q != NULL; q = q->prox)
+    {
+    if(q->val == p->val)
+    {
+      novo->prox = NULL;
+      novo->val = p->val;
+      ultimo->prox = novo;
+      ultimo = novo;
+      res->tam++;
+    }
+    }
+  }
+
+  libera(conj2);
+  libera(conj3);
+  return res;
+}
+
+
+
 
 void imprimir_lista(lista *arrayLista[], int nomeC) {
   printf("C%d = {", nomeC);
@@ -242,15 +316,19 @@ int main(void) {
     arrayLista[i] = criar(i);
 
   inserir_elementos(arrayLista, 2, 1);
-  inserir_elementos(arrayLista, 3, 100);
+  for(int i = 0; i < 10; i++)
+  {
+    inserir_elementos(arrayLista, 3, i);
+  }
+  
   inserir_elementos(arrayLista, 3, 10000);
   inserir_elementos(arrayLista, 4, 10000);
   inserir_elementos(arrayLista, 2, 2);
   imprimir_lista(arrayLista, 2);
   imprimir_lista(arrayLista, 3);
   imprimir_lista(arrayLista, 4);
-  imprimir_lista(arrayLista, 5);
-  arrayLista[2] = uniao(arrayLista, 2, 3, 4);
+
+  arrayLista[2] = intereseccao(arrayLista, 2, 3, 4);
   imprimir_lista(arrayLista, 2);
 }
 
@@ -258,7 +336,7 @@ int main(void) {
 
 -Comandos
 -União não pode ter elementos repetidos
--Interseção
+-Interseção precisa garantir que não hajam elementos repetidos entrando no programa
 -Diferença
 -Print em ordem crescente
 -"x está em Cy"
