@@ -218,7 +218,76 @@ lista *uniao(lista *arrList[], int nomeC1, int nomeC2, int nomeC3) {
 
   return res;
 }
-lista *intereseccao(lista *arrList[], int nomeC1, int nomeC2, int nomeC3) {
+lista *interseccao(lista *arrList[], int nomeC1, int nomeC2, int nomeC3) {
+  lista *conj1 = NULL;
+  lista *conj2 = NULL;
+  lista *conj3 = NULL;
+  for (int i = 0; i < 127; i++) {
+    if (arrList[i]->nome == nomeC1) {
+      conj1 = arrList[i];
+    }
+    if (arrList[i]->nome == nomeC2) {
+      conj2 = clone(arrList[i]);
+    }
+    if (arrList[i]->nome == nomeC3) {
+      conj3 = clone(arrList[i]);
+    }
+  }
+
+  if (!conj2 || !conj3) {
+    libera(conj2);
+    libera(conj3);
+    return NULL;
+  }
+
+  lista *res = malloc(sizeof(lista));
+  if (!res) {
+    libera(conj2);
+    libera(conj3);
+    return NULL;
+  }
+
+  res->head = malloc(sizeof(no));
+  if (!res->head) {
+    free(res);
+    libera(conj2);
+    libera(conj3);
+    return NULL;
+  }
+  res->head->prox = NULL;
+  res->tam = 0;
+  res->nome = nomeC1;
+
+  no* ultimo = res->head;
+  
+for(no* p = conj2->head->prox; p != NULL; p = p->prox)
+  {
+    no* novo = malloc(sizeof(no));
+    if(novo == NULL)
+    {
+      libera(conj2);
+      libera(conj3);
+      libera(res);
+      return NULL;
+    }
+    for(no* q = conj3->head->prox; q != NULL; q = q->prox)
+    {
+    if(q->val == p->val)
+    {
+      novo->prox = NULL;
+      novo->val = p->val;
+      ultimo->prox = novo;
+      ultimo = novo;
+      res->tam++;
+    }
+    }
+  }
+
+  libera(conj2);
+  libera(conj3);
+  return res;
+}
+lista *diferenca(lista *arrList[], int nomeC1, int nomeC2, int nomeC3) {
   lista *conj1 = NULL;
   lista *conj2 = NULL;
   lista *conj3 = NULL;
@@ -261,9 +330,9 @@ lista *intereseccao(lista *arrList[], int nomeC1, int nomeC2, int nomeC3) {
   no* q = conj3->head->prox;
   no* ultimo = res->head;
 
-  
 for(no* p = conj2->head->prox; p != NULL; p = p->prox)
   {
+    int fl = 0;
     no* novo = malloc(sizeof(no));
     if(novo == NULL)
     {
@@ -274,22 +343,60 @@ for(no* p = conj2->head->prox; p != NULL; p = p->prox)
     }
     for(no* q = conj3->head->prox; q != NULL; q = q->prox)
     {
-    if(q->val == p->val)
-    {
-      novo->prox = NULL;
-      novo->val = p->val;
-      ultimo->prox = novo;
-      ultimo = novo;
-      res->tam++;
+      if(q->val == p->val)
+      {
+        fl = 1;
+        break;
+      }
     }
+    if(!fl)
+      {
+        novo->prox = NULL;
+        novo->val = p->val;
+        ultimo->prox = novo;
+        ultimo = novo;
+        res->tam++;
+    }
+
+  
+  
+}
+libera(conj2);
+libera(conj3);   
+return res;    
+}
+
+void x_esta_em_c(lista *arrList[], int nomeC1, int valor) {
+  lista *conj1 = NULL;
+  for (int i = 0; i < 127; i++) {
+    if (arrList[i]->nome == nomeC1) 
+    {
+      conj1 = arrList[i];
+      break;
     }
   }
 
-  libera(conj2);
-  libera(conj3);
-  return res;
-}
+int fl = 0;
+for(no* p = conj1->head->prox; p != NULL; p = p->prox)
+  {
+    fl = 0;
+    if(p->val == valor)
+    {
+      fl = 1;
+      break;
+    }
+    
+    }
 
+if(fl == 1)
+{
+  printf("%d esta em C%d", valor, nomeC1);
+}
+else
+{
+  printf("%d nao esta em C%d", valor, nomeC1);
+}   
+}
 
 
 
@@ -328,8 +435,9 @@ int main(void) {
   imprimir_lista(arrayLista, 3);
   imprimir_lista(arrayLista, 4);
 
-  arrayLista[2] = intereseccao(arrayLista, 2, 3, 4);
+  arrayLista[2] = diferenca(arrayLista, 2, 3, 4);
   imprimir_lista(arrayLista, 2);
+  x_esta_em_c(arrayLista, 2, 10000);
 }
 
 /*TODO:
@@ -337,9 +445,7 @@ int main(void) {
 -Comandos
 -União não pode ter elementos repetidos
 -Interseção precisa garantir que não hajam elementos repetidos entrando no programa
--Diferença
 -Print em ordem crescente
--"x está em Cy"
 
  lista *temp = uniao(arrayLista, 2, 3, 4);
     if (temp != NULL) {
