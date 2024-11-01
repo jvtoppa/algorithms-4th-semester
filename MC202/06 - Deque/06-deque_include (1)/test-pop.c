@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <string.h>
 #define func(x) x
-
 #include "dequef.h"
 
 typedef int (*func_type)(void);

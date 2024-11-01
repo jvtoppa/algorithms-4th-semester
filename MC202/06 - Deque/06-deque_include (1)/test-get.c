@@ -29,12 +29,12 @@ int teste_1() {
     for(int i = 0; i < 8; i++) res -> data[i] = cur_data[i];
     res -> first = 0;
     res -> size = 8;
-    errno = 0;
+    errno = 1;
     float cur = df_get(res, -1);
     if(!errno) {
         return 0;
     }
-    errno = 0;
+    errno = 1;
     cur = df_get(res, 8);
     if(!errno) {
         return 0;
@@ -58,12 +58,12 @@ int teste_2() {
     for(int i = 6; i < 8; i++) res -> data[i - 6] = cur_data[i];
     res -> first = 2;
     res -> size = 8;
-    errno = 0;
+    errno = 1;
     float cur = df_get(res, -1);
     if(!errno) {
         return 0;
     }
-    errno = 0;
+    errno = 1;
     cur = df_get(res, 8);
     if(!errno) {
         return 0;

@@ -2,9 +2,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <limits.h>
 #include "dequef.h"
-
 
 /**
    Create an empty deque of floats.
@@ -18,48 +17,96 @@
 dequef* df_alloc(long capacity, double factor) 
 {
 
+    dequef* D = malloc(sizeof(dequef));
+    
+    if (!D) {
 
-dequef* deque = malloc(sizeof(dequef));
-if (deque == NULL)
-{
-   return NULL;
+        return NULL;
+
+    }
+
+    if (capacity > LONG_MAX / sizeof(float)) {
+
+        return NULL;
+
+    }
+
+    D->data = malloc(sizeof(float) * capacity);
+
+    if (!D->data) 
+    {
+
+        free(D);
+        return NULL;
+    
+    }
+
+    D->first = 0;
+    D->size = 0;
+    D->cap = capacity;
+    D->mincap = capacity;
+    D->factor = factor;
+
+    return D;
 }
 
-deque->cap = capacity;
-deque->size = 0;
-deque->factor = factor;
-deque->data =  malloc(capacity*sizeof(float));
-if (deque->data == NULL)
-{
-   return NULL;
-}
-
-deque->first = 0;
-deque->mincap = capacity;
-
-return deque;
-}
 /**
   Release a dequef and its data.
 **/
-void df_free(dequef* D) {
-   free(D->data);
-   free(D);
+
+void df_free(dequef* D) 
+{
+
+    if (D) {
+
+        free(D->data);
+        free(D);
+
+    }
 }
-
-
 
 
 /**
    The size of the deque.
 **/
-long df_size(dequef* D) {
-
-return D->size;
+long df_size(dequef* D) 
+{
+    return D->size;
 
 }
 
+/**
+Função Auxiliar: cria um novo vetor de capacidade dada pela função e substitui data na deque
+**/
+int df_resize(dequef* D, long capacidaden) 
+{
+    if (D == NULL || capacidaden < D->mincap)
+    {
+        return 0;
+    }
+    
 
+    float* dadosn = malloc(capacidaden * sizeof(float));
+
+    if (dadosn == NULL) //malloc falha 
+    {
+        return 0;
+    }
+
+    for (long i = 0; i < D->size; i++) 
+    {
+        
+        dadosn[i] = D->data[(D->first + i) % D->cap];
+    
+    }
+
+    free(D->data);
+    D->data = dadosn;
+    D->first = 0;
+    D->cap = capacidaden;
+
+    return 1;
+}
 
 /**
    Add x to the end of D.
@@ -70,34 +117,26 @@ return D->size;
    On success it returns 1.
    If attempting to resize the array fails then it returns 0 and D remains unchanged.
 **/
-int df_push(dequef* D, float x) 
-{
-   
-   if (D->size == D->cap) 
-   {
-      long int D_incr = D->cap * D->factor;
-      
-      if (D_incr < D->mincap) 
-      {
-            D_incr = D->mincap;
-      }
-      float* datan = realloc(D->data, sizeof(float) * D_incr);
-      if (datan == NULL) {
-         printf("Unable to resize.\n");
-         return 0;
-      }
+int df_push(dequef* D, float x) {
+    if (D->size == D->cap) 
+    {
+        long novacap = D->cap * D->factor;
 
-      D->data = datan;
-      D->cap = D_incr;
-      }
+        if (!df_resize(D, novacap)) 
+        {
+            printf("Unable to resize.\n");
+            return 0;
+        }
+    }
 
-   D->data[(D->first + D->size) % D->cap] = x;
-   D->size++;
+    long id = (D->first + D->size) % D->cap;
 
-   return 1;
+    D->data[id] = x;
+    
+    D->size++;
+    
+    return 1;
 }
-
-
 
 /**
    Remove a float from the end of D and return it.
@@ -110,38 +149,34 @@ int df_push(dequef* D, float x)
    It returns the float removed from D.
    What happens if D is empty before the call?
 **/
-float df_pop(dequef* D) {
-    if (D->size == 0) 
+float df_pop(dequef* D) 
+{
+    if (D == NULL) 
     {
-        return 0; 
+
+        return 0;
     }
 
-    long ulti = (D->first + D->size - 1) % D->cap;
-    float removido = D->data[ulti];
+    long id = (D->first + D->size - 1) % D->cap;
+
+    float val = D->data[id];
 
     D->size--;
 
-    if (D->size <= D->cap / (D->factor * D->factor)) 
+    if (D->size < D->cap / (D->factor * D->factor)) 
     {
-        long new_cap = D->cap / D->factor;
-
-        if (new_cap < D->mincap) 
-        {
-            new_cap = D->mincap;
-        }
-
-        float* datan = realloc(D->data, sizeof(float) * new_cap);
-        if (datan != NULL) 
-        {
-            D->data = datan;
-            D->cap = new_cap;
+        
+        long capacidaden = D->cap / D->factor;
+        
+        if (!df_resize(D, capacidaden)) {
+        
+            return val;
+        
         }
     }
 
-    return removido;
+    return val;
 }
-
-
 
 /**
    Add x to the beginning of D.
@@ -153,33 +188,26 @@ float df_pop(dequef* D) {
    If attempting to resize the array fails then it returns 0 and D remains unchanged.
 **/
 int df_inject(dequef* D, float x) {
-   if (D->size == D->cap) 
+    
+    if (D->size == D->cap) 
     {
-        long new_cap = D->cap * D->factor;
 
-        float* datan = realloc(D->data, sizeof(float) * new_cap);
-        if (datan == NULL) 
+        long novacap = (long)(D->cap * D->factor);
+
+        if (!df_resize(D, novacap)) 
         {
+            
             printf("Unable to resize.\n");
+            
             return 0;
         }
-
-        D->data = datan;
-        D->cap = new_cap;
-        D->first = (D->first + D->cap - 1) % D->cap;
     }
 
+    D->first = (D->first - 1 + D->cap) % D->cap;
     D->data[D->first] = x;
-    D->first = (D->first + D->cap - 1) % D->cap; 
     D->size++;
-
     return 1;
-
-
-
 }
-
-
 
 /**
    Remove a float from the beginning of D and return it.
@@ -194,38 +222,26 @@ int df_inject(dequef* D, float x) {
    What happens if D is empty before the call?
 **/
 float df_eject(dequef* D) {
-if (D->size == 0) 
+    if (D->size == 0)
     {
-        return 0; 
-    }
 
-    float removido = D->data[D->first];
+        return 0;
+    
+    } 
+
+    float val = D->data[D->first];
     D->first = (D->first + 1) % D->cap;
     D->size--;
 
-    if (D->size <= D->cap / (D->factor * D->factor)) 
+    if (D->size < D->cap / (D->factor * D->factor)) 
     {
-        long new_cap = D->cap / D->factor;
 
-        if (new_cap < D->mincap) 
-        {
-            new_cap = D->mincap;
-        }
-
-        float* datan = realloc(D->data, sizeof(float) * new_cap);
-        if (datan != NULL) 
-        {
-            D->data = datan;
-            D->cap = new_cap;
-        }
+        long novacap = (long)(D->cap / D->factor);
+    
     }
 
-    return removido;
-
-
+    return val;
 }
-
-
 
 /**
    Return D[i].
@@ -233,50 +249,48 @@ if (D->size == 0)
    If i is not in [0,|D|-1]] what happens then?
 **/
 float df_get(dequef* D, long i) {
+    if (i < 0 || i >= D->size)
+    {
 
-if (i < 0 || i >= D->size) 
-{
-   return 0;
+        return 0;
+    
+    }
+
+    return D->data[(D->first + i) % D->cap];
 }
-
-   return D->data[(D->first + i) % D->cap];
-}
-
-
 
 /**
    Set D[i] to x.
 
    If i is not in [0,|D|-1]] what happens then?
 **/
-void df_set(dequef* D, long i, float x) {
-if (i < 0 || i >= D->size) 
+void df_set(dequef* D, long i, float x) 
 {
-    return; 
+
+    if (D == NULL || i < 0 || i >= D->size)
+    {
+        return;
+    }
+
+    long ri = (D->first + i) % D->cap;
+    
+    D->data[ri] = x;
+
 }
-
-D->data[(D->first + i) % D->cap] = x;
-}
-
-
 
 /**
    Print the elements of D in a single line.
 **/
 void df_print(dequef* D) {
-if (D->size == 0) 
-   {
-      printf("\n");
-      return;
-   }
+    
+    printf("deque (%ld):", D->size);
+    
+    for (long i = 0; i < D->size; i++)
+    {
 
-   for (long i = 0; i < D->size; i++) 
-   {
-      printf("%.1f", D->data[(D->first + i) % D->cap]);
-      if (i < D->size - 1) 
-      {
-         printf(" ");
-      }
-   }
-   printf("\n");
+        printf(" ");
+        printf("%.1f", D->data[(D->first + i) % D->cap]);
+
+    }
+    printf("\n");
 }

@@ -164,61 +164,48 @@ int reverte(lista* L, int pos1, int pos2)
     return 1;
 }
 
-int move(lista* L, int pos1, int pos2, int pos3)
-{
-
-    if (L == NULL || pos1 < 1 || pos2 < pos1 || pos2 > L->tamanho || pos3 < 1 || pos3 > L->tamanho) 
-    {
-        return 0; 
+int move(lista* L, int pos1, int pos2, int pos3) {
+    if (L == NULL || pos1 < 0 || pos2 < pos1 || pos2 >= L->tamanho || pos3 < 0 || pos3 > L->tamanho) {
+        return 0;
     }
 
-
-    no* prev_start = NULL;
-    no* start = L->start;
-
-
-    for (int i = 1; i < pos1; i++)
-    {
-        prev_start = start;
-        start = start->prox;
+    if (pos3 > pos1 && pos3 <= pos2 + 1) {
+        return 1;
     }
 
+    no dummy;
+    dummy.prox = L->start;
+    no* prev_start = &dummy;
 
-    no* end = start;
-    for (int i = pos1; i < pos2; i++)
-    {
+    for (int i = 0; i < pos1; i++) {
+        prev_start = prev_start->prox;
+    }
+
+    no* end = prev_start->prox;
+    for (int i = pos1; i < pos2; i++) {
         end = end->prox;
     }
-    
-    no* next = end->prox;
 
-    if (pos3 == 1)
-    {
-        L->start = start;
+    no* start = prev_start->prox;
+    prev_start->prox = end->prox;
+
+    no* prev_insert = &dummy;
+    if (pos3 > pos2) {
+        pos3 -= (pos2 - pos1 + 1);
     }
-    else
-    {
-        no* prev_new_pos = L->start;
-        for (int i = 1; i < pos3 - 1; i++)
-        {
-            prev_new_pos = prev_new_pos->prox;
-        }
-        prev_new_pos->prox = start;
+    for (int i = 0; i < pos3; i++) {
+        prev_insert = prev_insert->prox;
     }
 
-    end->prox = next;
+    end->prox = prev_insert->prox;
+    prev_insert->prox = start;
 
-    if (prev_start != NULL)
-    {
-        prev_start->prox = next; 
-    }
-
-    return 1; 
+    L->start = dummy.prox;
+    return 1;
 }
-
 void imprimir(lista* L)
 {
-    if(L->tamanho == 0)
+    if(L == NULL)
     {
         return;
     }
@@ -231,7 +218,6 @@ void imprimir(lista* L)
 
 int libera(lista* L)
 {
-if (L == NULL) return 0;
 
     no* p = L->start;
     while (p != NULL)
@@ -248,7 +234,7 @@ if (L == NULL) return 0;
 int main(void)
 {
 
-lista* lst;
+lista* lst = NULL;
 
 while(1)
 {
